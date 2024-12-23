@@ -13,7 +13,7 @@ from datetime import datetime
 from database import Database
 from dotenv import load_dotenv
 from datetime import timedelta
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from sklearn.feature_extraction.text import TfidfVectorizer
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -22,6 +22,7 @@ import requests
 from urllib.parse import unquote
 from flask import Response, stream_with_context
 
+app = Flask(__name__)
 load_dotenv()
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'profile_images')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -45,7 +46,6 @@ def log_memory_usage():
     for stat in top_stats[:10]:
         logger.info(stat)
 
-app = Flask(__name__)
 CORS(app)
 
 agent = None
@@ -946,17 +946,12 @@ def keep_alive():
 
 if __name__ == '__main__':
     import threading
+    from waitress import serve
     import time
     try:
         threading.Thread(target=keep_alive, daemon=True).start()
-
         # Run the Flask app
-        app.run(
-            host='127.0.0.1',
-            port=5000,
-            debug=True,  # Disable in production
-            use_reloader=False  # Set to False in production
-        )
+        serve(app, host='127.0.0.1', port=5000)
         print("Backend server started...")
     except KeyboardInterrupt:
         print("\nServer stopped by user (Ctrl+C).")
