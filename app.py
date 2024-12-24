@@ -5,6 +5,8 @@ import time
 import uuid
 import httpx  
 import logging
+import threading
+from waitress import serve
 import tracemalloc
 from recommend_lawyer import recommend_top_lawyers
 from main import RAGAgent
@@ -63,6 +65,20 @@ def get_agent():
 app.config['SECRET_KEY'] = 'your_secret_key' 
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=5)
 jwt = JWTManager(app)
+
+VALID_USER_TYPES = ['client', 'lawyer']
+def invalid_token_callback(error):
+    return jsonify({
+        'error': 'Invalid token',
+        'message': 'The token is invalid or expired'
+    }), 422
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    return jsonify({
+        'error': 'Authorization required',
+        'message': 'Token is missing'
+    }), 401
 
 VALID_USER_TYPES = ['client', 'lawyer']
 
@@ -257,6 +273,9 @@ def get_chat_msg(chat_id):
 @app.route('/api/topics', methods=['GET'])
 @jwt_required()
 def get_user_chats():
+    # return jsonify({"topics": []}), 200
+    # user_id = get_jwt_identity()
+    # print(user_id)
     try:
         user_id = get_jwt_identity()
         response = db.get_chat_topics(user_id)
@@ -264,16 +283,29 @@ def get_user_chats():
     except Exception as e:
         return jsonify({"error": "Failed to fetch chats"}), 500
 
-@app.route('/api/chats', methods=['GET'])
-def get_chats():
-    try:
-        chat_sessions = db.get_all_chat_sessions()
-        return jsonify({
-            "chat_sessions": chat_sessions,
-            "count": len(chat_sessions)
-        }), 200
-    except Exception as e:
-        return jsonify({"error": "Failed to fetch chat sessions"}), 500
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Invalid authentication token',
+        'error': str(error)
+    }), 422
+
+@jwt.unauthorized_loader
+def unauthorized_response(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Missing Authorization Header',
+        'error': str(error)
+    }), 401
+
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_data):
+    return jsonify({
+        'status': 'error',
+        'message': 'Authentication token has expired',
+        'error': 'Token expired'
+    }), 401
 
 @app.route('/api/chats/<session_id>', methods=['GET'])
 def get_chat(session_id):
@@ -371,6 +403,7 @@ def login():
                 "user_id": user.UserId
             }
         )
+        # print(get_jwt())
         return jsonify({
             "message": "Login successful",
             "access_token": access_token,
@@ -945,9 +978,19 @@ def keep_alive():
         time.sleep(1)
 
 if __name__ == '__main__':
-    import threading
-    from waitress import serve
-    import time
+    try:
+        threading.Thread(target=keep_alive, daemon=True).start()
+        # Run the Flask app
+        serve(app, host='127.0.0.1', port=5000)
+        print("Backend server started...")
+    except KeyboardInterrupt:
+        print("\nServer stopped by user (Ctrl+C).")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
     try:
         threading.Thread(target=keep_alive, daemon=True).start()
         # Run the Flask app
