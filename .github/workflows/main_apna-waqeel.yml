@@ -35,23 +35,27 @@ jobs:
 
       - name: Create deployment package
         run: |
+          # Debug current directory
+          pwd
+          ls -la
+          
           # Create deployment structure
           mkdir -p deploy
           
-          # Copy all necessary files
+          # Copy with proper structure
           cp -r app deploy/
           cp requirements.txt deploy/
           cp startup.sh deploy/
           cp wsgi.py deploy/
           
-          # Ensure permissions
-          chmod +x deploy/startup.sh
+          # Create necessary __init__.py files
+          touch deploy/app/__init__.py
           
-          # Debug directory structure
+          # Show deployment structure
           echo "Deployment structure:"
           ls -R deploy/
           
-          # Create zip
+          # Create zip from root of deployment
           cd deploy
           zip -r ../release.zip ./*
 
