@@ -78,11 +78,21 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7EE4EEA0124042FB9DC1564DC5A70BA9 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B15A49FBCE064157BDE10058F91A36CE }}
 
+      - name: 'Stop Azure Web App'
+        run: |
+          az webapp stop --name apna-waqeel --resource-group your-resource-group
+          sleep 10
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'apna-waqeel'
           slot-name: 'Production'
-          package: release.zip
-          startup-command: 'cd /home/site/wwwroot && gunicorn --bind=0.0.0.0 --timeout 600 app:app'
+          package: './release.zip'
+          startup-command: 'gunicorn --bind=0.0.0.0 --timeout 600 app:app'
+
+      - name: 'Start Azure Web App'
+        run: |
+          sleep 10
+          az webapp start --name apna-waqeel --resource-group your-resource-group
