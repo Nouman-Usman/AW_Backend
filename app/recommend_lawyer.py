@@ -2,7 +2,7 @@ import csv
 import datetime
 import numpy as np
 from sklearn.decomposition import NMF
-from database import Database 
+from app.database import Database 
 from datetime import datetime, timedelta
 
 db = Database()

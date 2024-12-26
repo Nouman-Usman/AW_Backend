@@ -8,11 +8,11 @@ import logging
 import threading
 from waitress import serve
 import tracemalloc
-from recommend_lawyer import recommend_top_lawyers
-from main import RAGAgent
+from app.recommend_lawyer import recommend_top_lawyers
+from app.main import RAGAgent
 from flask_cors import CORS
 from datetime import datetime
-from database import Database
+from app.database import Database
 from dotenv import load_dotenv
 from datetime import timedelta
 from flask import Flask, jsonify, request, Response, stream_with_context
@@ -894,14 +894,6 @@ def update_credits():
         return jsonify({"error": "Failed to update credits"}), 500
 
 # ============= Health Check Routes =============
-@app.route('/api/', methods=['GET'])
-def health_check2():
-    return jsonify({"status": "healthy"})
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "healthy"})
-
 @app.route('/health')
 def health_check():
     return {'status': 'healthy'}, 200

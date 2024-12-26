@@ -1,7 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
 name: Build and deploy Python app to Azure Web App - apna-waqeel
 
 on:
@@ -39,8 +35,25 @@ jobs:
 
       - name: Create deployment package
         run: |
-          mkdir deploy
-          cp -r *.py requirements.txt deploy/
+          # Ensure app directory exists
+          mkdir -p deploy/app
+          
+          # Move app.py to routes.py in app directory
+          mv app.py app/routes.py || true
+          
+          # Copy all Python files and requirements
+          cp -r app/* deploy/app/
+          cp requirements.txt deploy/
+          cp startup.sh deploy/
+          
+          # Ensure permissions
+          chmod +x deploy/startup.sh
+          
+          # Debug directory structure
+          echo "Deployment structure:"
+          ls -R deploy/
+          
+          # Create zip
           cd deploy
           zip -r ../release.zip ./*
 
@@ -87,9 +100,9 @@ jobs:
           app-name: 'apna-waqeel'
           slot-name: 'Production'
           package: './release.zip'
-          startup-command: 'cd /home/site/wwwroot && gunicorn --workers 4 --bind 0.0.0.0:8000 app:app'
+          startup-command: 'bash /home/site/wwwroot/startup.sh'
 
       - name: Check deployment status
         run: |
-          sleep 30
+          sleep 45  # Increased wait time
           curl -sSf https://apna-waqeel.azurewebsites.net/health || exit 1

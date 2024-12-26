@@ -12,7 +12,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import END, StateGraph
 from typing import List, Dict, TypedDict, Any, Optional
 from pprint import pprint
-import blob
+import app.blob as blob
 from pinecone import Pinecone
 import json
 import logging
