@@ -35,16 +35,14 @@ jobs:
 
       - name: Create deployment package
         run: |
-          # Ensure app directory exists
-          mkdir -p deploy/app
+          # Create deployment structure
+          mkdir -p deploy
           
-          # Move app.py to routes.py in app directory
-          mv app.py app/routes.py || true
-          
-          # Copy all Python files and requirements
-          cp -r app/* deploy/app/
+          # Copy all necessary files
+          cp -r app deploy/
           cp requirements.txt deploy/
           cp startup.sh deploy/
+          cp wsgi.py deploy/
           
           # Ensure permissions
           chmod +x deploy/startup.sh
