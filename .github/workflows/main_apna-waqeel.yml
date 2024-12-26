@@ -75,6 +75,6 @@ jobs:
         with:
           app-name: 'apna-waqeel'
           slot-name: 'Production'
-          packages: '.'
-          start-up-command: 'python app.py'
+          package: '.'
+          startup-command: 'python app.py'
           
