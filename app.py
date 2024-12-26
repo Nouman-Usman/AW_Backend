@@ -902,6 +902,10 @@ def health_check2():
 def health_check():
     return jsonify({"status": "healthy"})
 
+@app.route('/health')
+def health_check():
+    return {'status': 'healthy'}, 200
+
 # Update the proxy_pdf route
 @app.route('/api/proxy-pdf')
 def proxy_pdf():
