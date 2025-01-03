@@ -5,7 +5,7 @@ import sys
 # Add the application directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from app import app
+from app import app as application
 
 if __name__ == "__main__":
-    app.run()
+    application.run(host='0.0.0.0', port=5000)

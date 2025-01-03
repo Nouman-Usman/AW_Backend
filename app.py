@@ -10,7 +10,7 @@ from waitress import serve
 import tracemalloc
 from app.recommend_lawyer import recommend_top_lawyers
 from app.main import RAGAgent
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from datetime import datetime
 from app.database import Database
 from dotenv import load_dotenv
@@ -23,7 +23,6 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 import requests
 from urllib.parse import unquote
 from flask import Response, stream_with_context
-from app import app
 
 app = Flask(__name__)
 load_dotenv()
@@ -152,20 +151,6 @@ def get_pdf_with_ssl_handling(url, headers):
 
     except requests.RequestException as e:
         raise
-
-# Add CORS headers to all responses
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
-# Add OPTIONS handler for all routes
-@app.route('/api/<path:path>', methods=['OPTIONS'])
-def handle_options(path):
-    return '', 200
 
 # ============= Chat Related Routes =============
 @app.route('/api/ask', methods=['POST'])
@@ -348,12 +333,8 @@ def get_chat(session_id):
         return jsonify({"error": "Failed to fetch chat session"}), 500
 
 # ============= Auth Related Routes =============
-@app.route('/api/signup', methods=['POST', 'OPTIONS'])
-@cross_origin(supports_credentials=True)
+@app.route('/api/signup', methods=['POST'])
 def signup():
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"}), 200
-        
     data = request.get_json()
     name = data.get('name')
     email = data.get('email')
@@ -400,12 +381,8 @@ def signup():
     except Exception as e:
         return jsonify({"error": "Failed to create user"}), 500
 
-@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
-@cross_origin(supports_credentials=True)
+@app.route('/api/auth/login', methods=['POST'])
 def login():
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"}), 200
-        
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -917,9 +894,17 @@ def update_credits():
         return jsonify({"error": "Failed to update credits"}), 500
 
 # ============= Health Check Routes =============
-@app.route('/health')
+@app.route('/api/', methods=['GET'])
+def health_check2():
+    return jsonify({"status": "healthy"})
+
+@app.route('/api/health', methods=['GET'])
 def health_check():
-    return {'status': 'healthy'}, 200
+    return jsonify({"status": "healthy"})
+
+# @app.route('/health')
+# def health_check():
+#     return {'status': 'healthy'}, 200
 
 # Update the proxy_pdf route
 @app.route('/api/proxy-pdf')
